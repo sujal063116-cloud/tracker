@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPSC Study Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-light: #ffffff;
+            --bg-secondary: #f9fafb;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body.dark-mode {
+            --bg-light: #1f2937;
+            --bg-secondary: #111827;
+            --text-dark: #f3f4f6;
+            --text-light: #d1d5db;
+            --border: #374151;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+
+        .content {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            width: auto;
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 4px 4px 4px 0;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            width: auto;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .task-item {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-left-color: var(--success);
+        }
+
+        .task-content {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .task-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .task-meta {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #ec4899);
+            transition: width 0.3s;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-light);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+        }
+
+        .nav-btn {
+            padding: 10px 5px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-light);
+            border-top: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            color: var(--primary);
+            border-top-color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 90px;
+            left: 15px;
+            right: 15px;
+            background: var(--success);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            animation: slideUp 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 90px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #ec4899;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 400;
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .stat-box {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .curriculum-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .curriculum-card .card-title {
+            color: white;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        .week-box {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .week-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .day-item {
+            font-size: 12px;
+            color: var(--text-light);
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .day-item:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 480px) {
+            .header-title {
+                font-size: 18px;
+            }
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">🇮🇳 UPSC Study Tracker</div>
+        <div class="header-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="today-date">Today</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">🔥 <span id="streak-count">0</span></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="progress-percent">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+
+            <!-- HOME PAGE -->
+            <div id="home-page" class="page active">
+                <div class="card curriculum-card">
+                    <div class="card-title">📖 Today's Topic</div>
+                    <div id="today-curriculum" style="font-size: 14px; line-height: 1.6;">
+                        Loading your study plan...
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📚 Today's Progress</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div id="progress-text" style="font-size: 13px; color: var(--text-light); text-align: center;">
+                        0/0 tasks completed
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📊 Quick Stats</div>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-number" id="stat-completed">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Total Tasks</div>
+                            <div class="stat-number" id="stat-total">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🎯 Next Steps</div>
+                    <div style="font-size: 13px; line-height: 1.8; color: var(--text-light);">
+                        <div>✓ Add today's tasks from your curriculum topic</div>
+                        <div>✓ Study and mark tasks as complete</div>
+                        <div>✓ Track your daily progress</div>
+                        <div>✓ View next week's topics in Plan tab</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TASKS PAGE -->
+            <div id="tasks-page" class="page">
+                <div class="card">
+                    <div class="card-title">➕ Add New Task</div>
+                    <div class="form-group">
+                        <label>Task Name *</label>
+                        <input type="text" id="task-name" placeholder="e.g., Read Chapter 1 of Polity">
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select id="task-subject">
+                            <option value="">Select subject...</option>
+                            <option value="Polity">Polity</option>
+                            <option value="History">History</option>
+                            <option value="Geography">Geography</option>
+                            <option value="Economy">Economy</option>
+                            <option value="Environment">Environment</option>
+                            <option value="Current Affairs">Current Affairs</option>
+                            <option value="Revision">Revision</option>
+                            <option value="Test">Test/Mock</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <input type="time" id="task-time">
+                    </div>
+                    <button class="btn btn-primary" onclick="addTask()">+ Add Task</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📋 Today's Tasks</div>
+                    <div id="tasks-list" style="font-size: 13px; color: var(--text-light);">
+                        <p>No tasks yet. Add one above!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CURRICULUM PAGE -->
+            <div id="curriculum-page" class="page">
+                <div class="card">
+                    <div class="card-title">📚 6-Week Study Plan</div>
+                    <p style="font-size: 12px; color: var(--text-light); margin-bottom: 12px;">
+                        Follow this structured curriculum for your UPSC 2027 preparation
+                    </p>
+                    <div id="curriculum-list"></div>
+                </div>
+            </div>
+
+            <!-- CURRENT AFFAIRS PAGE -->
+            <div id="affairs-page" class="page">
+                <div class="card">
+                    <div class="card-title">➕ Add Current Affairs Note</div>
+                    <div class="form-group">
+                        <label>Topic *</label>
+                        <input type="text" id="affairs-topic" placeholder="e.g., India-US Relations">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="affairs-category">
+                            <option value="General">General</option>
+                            <option value="Polity">Polity</option>
+                            <option value="Economy">Economy</option>
+                            <option value="International Relations">International Relations</option>
+                            <option value="Environment">Environment</option>
+                            <option value="Science & Tech">Science & Technology</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Notes</label>
+                        <textarea id="affairs-notes" placeholder="What did you learn?"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="addAffairs()">Save Note</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📰 Today's Notes</div>
+                    <div id="affairs-list" style="font-size: 13px; color: var(--text-light);">
+                        <p>No entries yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROGRESS PAGE -->
+            <div id="progress-page" class="page">
+                <div class="card" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; border: none;">
+                    <div class="card-title" style="color: white;">🔥 Study Streak</div>
+                    <div style="text-align: center; padding: 15px;">
+                        <div style="font-size: 40px; font-weight: 700;" id="streak-display">0</div>
+                        <div style="opacity: 0.9;">Days in a row</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📈 Weekly Statistics</div>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Total Tasks</div>
+                            <div class="stat-number" id="week-tasks">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-number" id="week-completed">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📝 Current Affairs Count</div>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">This Week</div>
+                            <div class="stat-number" id="week-affairs">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">This Month</div>
+                            <div class="stat-number" id="month-affairs">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS PAGE -->
+            <div id="settings-page" class="page">
+                <div class="card">
+                    <div class="card-title">⚙️ Settings</div>
+
+                    <div class="form-group">
+                        <div class="toggle-switch">
+                            <label style="flex: 1; margin: 0;">Dark Mode</label>
+                            <label class="switch">
+                                <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                        <div class="card-title" style="margin-bottom: 12px;">💾 Data Management</div>
+                        <button class="btn btn-primary" onclick="exportData()">Export My Data</button>
+                        <button class="btn btn-primary" onclick="importPrompt()">Import Data</button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                    </div>
+
+                    <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                        <button class="btn btn-danger" style="width: 100%;" onclick="clearAllData()">Delete All Data</button>
+                    </div>
+
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-light); text-align: center;">
+                        <p>UPSC Study Tracker v1.0</p>
+                        <p>Made for UPSC 2027 aspirants</p>
+                        <p>All data saved locally on your device</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-btn active" onclick="goPage('home', this)">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </button>
+        <button class="nav-btn" onclick="goPage('tasks', this)">
+            <span class="nav-icon">📚</span>
+            <span>Tasks</span>
+        </button>
+        <button class="nav-btn" onclick="goPage('curriculum', this)">
+            <span class="nav-icon">📖</span>
+            <span>Plan</span>
+        </button>
+        <button class="nav-btn" onclick="goPage('affairs', this)">
+            <span class="nav-icon">📰</span>
+            <span>Affairs</span>
+        </button>
+        <button class="nav-btn" onclick="goPage('progress', this)">
+            <span class="nav-icon">📊</span>
+            <span>Track</span>
+        </button>
+    </div>
+
+    <!-- Settings FAB -->
+    <button class="fab" onclick="goPage('settings', document.querySelector('.nav-btn'))">⚙️</button>
+
+    <script>
+        // Global State
+        const app = {
+            date: new Date().toISOString().split('T')[0],
+            tasks: {},
+            affairs: {},
+            streak: 0
+        };
+
+        // Curriculum Data
+        const curriculum = [
+            {
+                week: 1,
+                subject: 'POLITY',
+                days: [
+                    { day: 'Monday', topic: 'Constitution: Meaning & Need' },
+                    { day: 'Tuesday', topic: 'Historical Background' },
+                    { day: 'Wednesday', topic: 'Constituent Assembly' },
+                    { day: 'Thursday', topic: 'Preamble' },
+                    { day: 'Friday', topic: 'Features of Constitution' },
+                    { day: 'Saturday', topic: 'Citizenship + Constitution' },
+                    { day: 'Sunday', topic: 'POLITY TEST' }
+                ]
+            },
+            {
+                week: 2,
+                subject: 'FUNDAMENTAL RIGHTS',
+                days: [
+                    { day: 'Monday', topic: 'Articles 12-13' },
+                    { day: 'Tuesday', topic: 'Article 14 - Equality' },
+                    { day: 'Wednesday', topic: 'Articles 15-16' },
+                    { day: 'Thursday', topic: 'Articles 17-18' },
+                    { day: 'Friday', topic: 'Article 19 - Six Freedoms' },
+                    { day: 'Saturday', topic: 'Articles 20-22' },
+                    { day: 'Sunday', topic: 'Article 32 + TEST' }
+                ]
+            },
+            {
+                week: 3,
+                subject: 'HISTORY',
+                days: [
+                    { day: 'Monday', topic: 'Indus Valley Civilization' },
+                    { day: 'Tuesday', topic: 'Vedic Age' },
+                    { day: 'Wednesday', topic: 'Buddhism & Jainism' },
+                    { day: 'Thursday', topic: 'Mauryan Empire + Ashoka' },
+                    { day: 'Friday', topic: 'Gupta Period' },
+                    { day: 'Saturday', topic: 'Sangam + South India' },
+                    { day: 'Sunday', topic: 'HISTORY TEST' }
+                ]
+            },
+            {
+                week: 4,
+                subject: 'GEOGRAPHY',
+                days: [
+                    { day: 'Monday', topic: 'Earth + Latitude/Longitude' },
+                    { day: 'Tuesday', topic: 'Earth\'s Motions + Seasons' },
+                    { day: 'Wednesday', topic: 'Rocks + Earth\'s Interior' },
+                    { day: 'Thursday', topic: 'Plate Tectonics' },
+                    { day: 'Friday', topic: 'Earthquakes + Volcanoes' },
+                    { day: 'Saturday', topic: 'Mountains + Landforms' },
+                    { day: 'Sunday', topic: 'GEOGRAPHY TEST' }
+                ]
+            },
+            {
+                week: 5,
+                subject: 'ECONOMY',
+                days: [
+                    { day: 'Monday', topic: 'What is an Economy?' },
+                    { day: 'Tuesday', topic: 'GDP + GNP + National Income' },
+                    { day: 'Wednesday', topic: 'Inflation' },
+                    { day: 'Thursday', topic: 'Money + Banking' },
+                    { day: 'Friday', topic: 'RBI + Monetary Policy' },
+                    { day: 'Saturday', topic: 'Fiscal Policy + Government Budget' },
+                    { day: 'Sunday', topic: 'ECONOMY TEST' }
+                ]
+            },
+            {
+                week: 6,
+                subject: 'ENVIRONMENT',
+                days: [
+                    { day: 'Monday', topic: 'Ecosystem' },
+                    { day: 'Tuesday', topic: 'Food Chain + Food Web' },
+                    { day: 'Wednesday', topic: 'Biodiversity' },
+                    { day: 'Thursday', topic: 'National Parks + Sanctuaries' },
+                    { day: 'Friday', topic: 'Pollution' },
+                    { day: 'Saturday', topic: 'Climate Change' },
+                    { day: 'Sunday', topic: 'ENVIRONMENT TEST' }
+                ]
+            }
+        ];
+
+        // Initialize App
+        function init() {
+            loadData();
+            updateDate();
+            showTodayTopic();
+            updateHome();
+            renderCurriculum();
+            
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('dark-toggle').checked = true;
+            }
+        }
+
+        // Navigation
+        function goPage(name, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(name + '-page').classList.add('active');
+
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if (btn && btn.classList) btn.classList.add('active');
+
+            if (name === 'home') updateHome();
+            if (name === 'tasks') renderTasks();
+            if (name === 'curriculum') renderCurriculum();
+            if (name === 'affairs') renderAffairs();
+            if (name === 'progress') updateProgress();
+        }
+
+        // Date & Curriculum
+        function updateDate() {
+            const today = new Date();
+            document.getElementById('today-date').textContent = today.toLocaleDateString('en-IN', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            const newDate = today.toISOString().split('T')[0];
+            if (newDate !== app.date) {
+                app.date = newDate;
+                saveData();
+            }
+        }
+
+        function getTodayTopic() {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const today = new Date();
+            const currentDay = days[today.getDay()];
+
+            const startDate = new Date('2026-08-12');
+            const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            const weekNum = Math.floor(daysElapsed / 7) + 1;
+
+            if (weekNum > 6) return null;
+
+            const week = curriculum[weekNum - 1];
+            const dayData = week.days.find(d => d.day === currentDay);
+
+            return { week: week.week, subject: week.subject, ...dayData };
+        }
+
+        function showTodayTopic() {
+            const topic = getTodayTopic();
+            const div = document.getElementById('today-curriculum');
+
+            if (topic) {
+                div.innerHTML = `
+                    <div style="margin-bottom: 8px;">
+                        <strong>Week ${topic.week} - ${topic.subject}</strong>
+                    </div>
+                    <div style="font-size: 16px; font-weight: 600;">📚 ${topic.topic}</div>
+                    <div style="margin-top: 10px; opacity: 0.8; font-size: 12px;">
+                        Morning: Study this topic<br>
+                        Evening: Revise + solve PYQs<br>
+                        Sunday: Take test
+                    </div>
+                `;
+            } else {
+                div.innerHTML = '<p>Curriculum completed! 🎉 Continue with advanced preparation.</p>';
+            }
+        }
+
+        // Tasks
+        function addTask() {
+            const name = document.getElementById('task-name').value.trim();
+            if (!name) {
+                showToast('Please enter task name', true);
+                return;
+            }
+
+            if (!app.tasks[app.date]) app.tasks[app.date] = [];
+
+            app.tasks[app.date].push({
+                id: Date.now(),
+                name: name,
+                subject: document.getElementById('task-subject').value,
+                time: document.getElementById('task-time').value,
+                done: false
+            });
+
+            document.getElementById('task-name').value = '';
+            document.getElementById('task-subject').value = '';
+            document.getElementById('task-time').value = '';
+
+            saveData();
+            renderTasks();
+            updateHome();
+            showToast('✅ Task added!');
+        }
+
+        function toggleTask(id) {
+            const task = app.tasks[app.date].find(t => t.id === id);
+            if (task) {
+                task.done = !task.done;
+                saveData();
+                renderTasks();
+                updateHome();
+            }
+        }
+
+        function deleteTask(id) {
+            app.tasks[app.date] = app.tasks[app.date].filter(t => t.id !== id);
+            saveData();
+            renderTasks();
+            updateHome();
+        }
+
+        function renderTasks() {
+            const tasks = app.tasks[app.date] || [];
+            const html = tasks.length === 0 
+                ? '<p style="color: var(--text-light);">No tasks yet</p>'
+                : tasks.map(t => `
+                    <div class="task-item ${t.done ? 'completed' : ''}">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id})" style="margin-top: 2px;">
+                        <div class="task-content">
+                            <div class="task-name">${t.name}</div>
+                            ${t.subject ? `<div class="task-meta">📚 ${t.subject}</div>` : ''}
+                            ${t.time ? `<div class="task-meta">🕐 ${t.time}</div>` : ''}
+                        </div>
+                        <button class="btn btn-danger" style="width: auto; margin: 0;" onclick="deleteTask(${t.id})">Delete</button>
+                    </div>
+                `).join('');
+
+            document.getElementById('tasks-list').innerHTML = html;
+        }
+
+        // Current Affairs
+        function addAffairs() {
+            const topic = document.getElementById('affairs-topic').value.trim();
+            if (!topic) {
+                showToast('Please enter topic', true);
+                return;
+            }
+
+            if (!app.affairs[app.date]) app.affairs[app.date] = [];
+
+            app.affairs[app.date].push({
+                id: Date.now(),
+                topic: topic,
+                category: document.getElementById('affairs-category').value,
+                notes: document.getElementById('affairs-notes').value
+            });
+
+            document.getElementById('affairs-topic').value = '';
+            document.getElementById('affairs-notes').value = '';
+
+            saveData();
+            renderAffairs();
+            showToast('✅ Saved!');
+        }
+
+        function renderAffairs() {
+            const affairs = app.affairs[app.date] || [];
+            const html = affairs.length === 0
+                ? '<p style="color: var(--text-light);">No entries yet</p>'
+                : affairs.map(a => `
+                    <div style="background: var(--bg-secondary); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #ec4899;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">${a.topic}</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">📂 ${a.category}</div>
+                        ${a.notes ? `<div style="font-size: 12px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);">${a.notes}</div>` : ''}
+                    </div>
+                `).join('');
+
+            document.getElementById('affairs-list').innerHTML = html;
+        }
+
+        // Home
+        function updateHome() {
+            const tasks = app.tasks[app.date] || [];
+            const done = tasks.filter(t => t.done).length;
+            const total = tasks.length;
+            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+            document.getElementById('progress-percent').textContent = pct + '%';
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = `${done}/${total} tasks completed`;
+            document.getElementById('stat-completed').textContent = done;
+            document.getElementById('stat-total').textContent = total;
+
+            showTodayTopic();
+        }
+
+        // Curriculum
+        function renderCurriculum() {
+            const html = curriculum.map(w => `
+                <div class="week-box">
+                    <div class="week-title">📚 Week ${w.week}: ${w.subject}</div>
+                    ${w.days.map(d => `
+                        <div class="day-item">
+                            <strong>${d.day}</strong> - ${d.topic}
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+
+            document.getElementById('curriculum-list').innerHTML = html;
+        }
+
+        // Progress
+        function updateProgress() {
+            document.getElementById('streak-display').textContent = app.streak;
+            document.getElementById('streak-count').textContent = app.streak;
+
+            let weekTasks = 0, weekDone = 0, weekAffairs = 0, monthAffairs = 0;
+
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+
+                if (app.tasks[dateStr]) {
+                    weekTasks += app.tasks[dateStr].length;
+                    weekDone += app.tasks[dateStr].filter(t => t.done).length;
+                }
+                if (app.affairs[dateStr]) {
+                    weekAffairs += app.affairs[dateStr].length;
+                }
+            }
+
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                if (app.affairs[dateStr]) monthAffairs += app.affairs[dateStr].length;
+            }
+
+            document.getElementById('week-tasks').textContent = weekTasks;
+            document.getElementById('week-completed').textContent = weekDone;
+            document.getElementById('week-affairs').textContent = weekAffairs;
+            document.getElementById('month-affairs').textContent = monthAffairs;
+        }
+
+        // Settings
+        function toggleDarkMode() {
+            const isDark = document.getElementById('dark-toggle').checked;
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function exportData() {
+            const data = JSON.stringify({ app, date: new Date().toISOString() }, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'upsc-backup-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            showToast('✅ Data exported!');
+        }
+
+        function importPrompt() {
+            document.getElementById('import-file').click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    Object.assign(app, imported.app);
+                    saveData();
+                    location.reload();
+                } catch (err) {
+                    showToast('Invalid file!', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure? This will delete all your data!')) {
+                if (confirm('Last chance to confirm. Delete everything?')) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            }
+        }
+
+        // Data
+        function saveData() {
+            localStorage.setItem('upsc_data', JSON.stringify(app));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('upsc_data');
+            if (saved) Object.assign(app, JSON.parse(saved));
+        }
+
+        // Toast
+        function showToast(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // Start
+        init();
+        setInterval(updateDate, 60000);
+    </script>
+</body>
+</html>
